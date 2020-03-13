@@ -1,38 +1,59 @@
-// Function to fetch requested GDC RNA-seq data (i.e., expression) from Firebrowse for particular [cohort] and [gene]:
+// Executes a fetch for the following mRNASeq-associated data from Firebrowse as a 1-D array, where each element of the array 
+// is associated with a particular cohort-gene pair. Selections of cohort and gene are made by the user.
+    // cohort
+    // expression_log2
+    // gene
+    // geneID
+    // protocol
+    // sample_type
+    // tcga_participant_barcode
+    // z-score
 
+// Function to fetch expression data from firebrowse:
 fetchExpressionData = async function(cohortQuery, geneQuery) {
   
-  // Set up fields and host/endpoint urls:
-  var queryJSON = {
-      format: 'json',
-      cohort: cohortQuery,
-      gene: geneQuery,
-      page: 1,
-      page_size: 2000 * cohortQuery.length * geneQuery.length,
-      sort_by: 'tcga_participant_barcode'                               // Allows order of individuals while sorting for cohort/gene sets later
-  };
+  // Set up host and endpoint urls
   const hosturl = 'https://firebrowse.herokuapp.com';
   const endpointurl='http://firebrowse.org/api/v1/Samples/mRNASeq';
+  
+  // Set up endpoint url fields (except cohort and gene) with preset values
+  const endpointurl_presets = {
+      format: 'json',
+      gene: geneQuery,
+      cohort: cohortQuery,     
+      protocol: 'RSEM',
+      page: '1',
+      page_size: 2000 * cohortQuery.length * geneQuery.length,
+      sort_by: 'tcga_participant_barcode' 
+  };
 
-  // Querying multiple cohorts & genes at once:
-  // .join() creates and returns a new string by concatenating all of the elements in an array (or an array-like object), 
-  // separated by commas or a specified separator string
-  var cohortQueryString = cohortQuery.join(); 
-  var geneQueryString = geneQuery.join();
-  var queryString = 'format=json&gene=' + geneQueryString + '&cohort=' + cohortQueryString + '&protocol=RSEM&page=' + 
-  queryJSON.page.toString() + '&page_size=' + queryJSON.page_size.toString() + '&sort_by=' + queryJSON.sort_by;
+  // Assemble a string by concatenating all fields and field values for endpoint url
+  const endpointurl_fieldsWithValues = 
+      'format=' + endpointurl_presets.format + 
+      '&gene=' + geneQuery + 
+      '&cohort=' + cohortQuery + 
+      '&protocol=' + endpointurl_presets.protocol +
+      '&page=' + endpointurl_presets.page + 
+      '&page_size=' + endpointurl_presets.page_size.toString() + 
+      '&sort_by=' + endpointurl_presets.sort_by;
 
-  // Performing fetch:
-  const result = await fetch(hosturl + '?' + endpointurl + '?' + queryString);
+    
+  // Monitor the performance of the fetch:
+  const fetchStart = performance.now();
 
-  // Monitoring the performance of the fetch:
-  var fetchStart = performance.now();
+  // Fetch data from stitched api:
+  var fetchedExpressionData = await fetch(hosturl + '?' + endpointurl + '?' + endpointurl_fieldsWithValues);
 
-  // Return performance of the fetch:
+  // Monitor the performance of the fetch:
   var fetchTime = performance.now() - fetchStart;
   console.log("Performance of fetch: ");
   console.log(fetchTime);
 
-  return result.json();
+  // Check if the fetch worked properly:
+  if (fetchedExpressionData == '')
+      return ['Error: Invalid Input Fields for Query.', 0];
+  else {
+      return fetchedExpressionData.json();
+  }
 
 }
