@@ -1,0 +1,37 @@
+<html>
+<meta charset="utf-8">
+<head>
+  <script src='http://www.d3plus.org/js/d3.js' type='text/javascript'></script>
+  <script src='http://www.d3plus.org/js/d3plus.js' type='text/javascript'></script>
+</head>
+<body>
+<div id="viz"></div>
+
+<style>
+    div#boxviz{
+       width: 600px;
+       height: 400px;
+    }
+</style>
+
+<script>
+$.getJSON("validGeneList.json", function(json)
+  data = json;
+  success = function(data){
+   d3plus.viz()
+    .container("#viz")
+    .data(data)
+    .type("box")
+    .id("tcga_participant_barcode")
+    .x("gene")
+    .y("expression_log2")
+    .ui([{
+        "label": "Visualization Type",
+        "method": "type",
+        "value": ["scatter","box"]
+      }])
+    .draw()
+});
+</script>
+</body>
+</html>
